@@ -6,12 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Position = System.Tuple<int, int>;
 
 namespace AlphaBeta
 {
-    using System.Threading;
-    using Position = Tuple<int, int>;
-
     /// <summary>
     /// Possible game cell values.
     /// </summary>
@@ -84,14 +82,19 @@ namespace AlphaBeta
         }.AsReadOnly();
 
         /// <summary>
-        /// The game position.
+        /// The flags indicating which cells are used (0 is empty, 1 is used).
         /// </summary>
-        private readonly ReversiValue[][] Table;
+        private readonly ulong OccupiedCellsTable;
+
+        /// <summary>
+        /// The flags indicating which player's disks are at game cells (1 is maximizing player's cell).
+        /// </summary>
+        private readonly ulong PlayersTable;
 
         /// <summary>
         /// Flags indicating which cells are stable.
         /// </summary>
-        private readonly bool[][] StabilityTable;
+        private readonly ulong StabilityTable;
 
         /// <summary>
         /// The children nodes.
@@ -104,35 +107,27 @@ namespace AlphaBeta
         private readonly Lazy<int> heuristics;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReversiNode" /> class.
+        /// Initializes a new instance of the <see cref="ReversiNode" /> class with the starting position.
         /// </summary>
-        public ReversiNode(): this(new ReversiValue[Size][], new bool[Size][], true)
+        public ReversiNode() : this(0x1818000000UL, 0x810000000UL, 0UL, true)
         {
-            for (int i = 0; i < Size; ++i)
-            {
-                Table[i] = new ReversiValue[Size];
-                StabilityTable[i] = new bool[Size];
-            }
-
-            int middle = Size / 2 - 1;
-
-            Table[middle][middle + 1] = ReversiValue.Maximizing;
-            Table[middle + 1][middle] = ReversiValue.Maximizing;
-
-            Table[middle][middle] = ReversiValue.Minimizing;
-            Table[middle + 1][middle + 1] = ReversiValue.Minimizing;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReversiNode" /> class.
         /// </summary>
         /// <param name="table">The game state.</param>
-        /// <param name="stable">The flags of stable cells.</param>
+        /// <param name="stabilityTable">The flags of stable cells.</param>
         /// <param name="maximizing">Indicates whether it is maximizing player's turn.</param>
-        private ReversiNode(ReversiValue[][] table, bool[][] stable, bool maximizing)
+        private ReversiNode(
+            ulong occupiedCellsTable,
+            ulong playersTable,
+            ulong stabilityTable,
+            bool maximizing)
         {
-            Table = table;
-            StabilityTable = stable;
+            OccupiedCellsTable = occupiedCellsTable;
+            PlayersTable = playersTable;
+            StabilityTable = stabilityTable;
 
             Maximizing = maximizing;
             Player = maximizing ? ReversiValue.Maximizing : ReversiValue.Minimizing;
@@ -190,6 +185,24 @@ namespace AlphaBeta
         }
 
         /// <summary>
+        /// Gets the table value at given coordinates using bit manipulation.
+        /// </summary>
+        /// <param name="i">The row.</param>
+        /// <param name="j">The column.</param>
+        /// <returns>Table value at given coordinates.</returns>
+        private ReversiValue GetValue(int i, int j)
+        {
+            if (!GetBit(OccupiedCellsTable, i, j))
+            {
+                return ReversiValue.Empty;
+            }
+
+            return GetBit(PlayersTable, i, j) == true
+                ? ReversiValue.Maximizing
+                : ReversiValue.Minimizing;
+        }
+
+        /// <summary>
         /// Computes all children nodes of current node.
         /// </summary>
         /// <returns>Children nodes.</returns>
@@ -197,10 +210,10 @@ namespace AlphaBeta
         {
             return GetValidMoves().Select(move =>
             {
-                ReversiValue[][] table = GetTableForMove(move);
-                bool[][] stabilityTable = GetStabilityTableForMove(move);
+                Tuple<ulong, ulong> table = GetTableForMove(move);
+                ulong stabilityTable = GetStabilityTableForMove(move);
 
-                return new ReversiNode(table, stabilityTable, !Maximizing);
+                return new ReversiNode(table.Item1, table.Item2, stabilityTable, !Maximizing);
             }).ToList().AsReadOnly();
         }
 
@@ -208,52 +221,38 @@ namespace AlphaBeta
         /// Returns the table after given move.
         /// </summary>
         /// <returns>The table after given move.</returns>
-        private ReversiValue[][] GetTableForMove(Tuple<Position, IEnumerable<Position>> move)
+        private Tuple<ulong, ulong> GetTableForMove(Tuple<Position, IEnumerable<Position>> move)
         {
-            ReversiValue[][] table = new ReversiValue[Size][];
-            for (int i = 0; i < Size; ++i)
-            {
-                table[i] = new ReversiValue[Size];
-                for (int j = 0; j < Size; ++j)
-                {
-                    table[i][j] = Table[i][j];
-                }
-            }
+            ulong occupiedCellsTable = OccupiedCellsTable;
+            ulong playersTable = PlayersTable;
 
             Position cell = move.Item1;
-            table[cell.Item1][cell.Item2] = Player;
+            SetBit(ref occupiedCellsTable, cell.Item1, cell.Item2, true);
+            SetBit(ref playersTable, cell.Item1, cell.Item2, Player == ReversiValue.Maximizing);
 
             foreach (Position direction in move.Item2)
             {
                 int dx = cell.Item1 + direction.Item1;
                 int dy = cell.Item2 + direction.Item2;
 
-                while (dx >= 0 && dx < Size && dy >= 0 && dy < Size && table[dx][dy] == Opponent)
+                while (dx >= 0 && dx < Size && dy >= 0 && dy < Size && GetValue(dx, dy) == Opponent)
                 {
-                    table[dx][dy] = Player;
+                    SetBit(ref playersTable, dx, dy, Player == ReversiValue.Maximizing);
                     dx += direction.Item1;
                     dy += direction.Item2;
                 }
             }
 
-            return table;
+            return new Tuple<ulong, ulong>(occupiedCellsTable, playersTable);
         }
 
         /// <summary>
         /// Returns the stability table after given move.
         /// </summary>
         /// <returns>The stability table after given move.</returns>
-        private bool[][] GetStabilityTableForMove(Tuple<Position, IEnumerable<Position>> move)
+        private ulong GetStabilityTableForMove(Tuple<Position, IEnumerable<Position>> move)
         {
-            bool[][] stable = new bool[Size][];
-            for (int i = 0; i < Size; ++i)
-            {
-                stable[i] = new bool[Size];
-                for (int j = 0; j < Size; ++j)
-                {
-                    stable[i][j] = StabilityTable[i][j];
-                }
-            }
+            ulong stable = StabilityTable;
 
             Position cell = move.Item1;
             if (CornerCells.Contains(cell))
@@ -290,7 +289,7 @@ namespace AlphaBeta
             {
                 for (int j = 0; j < Size; ++j)
                 {
-                    if (Table[i][j] == ReversiValue.Empty)
+                    if (GetValue(i, j) == ReversiValue.Empty)
                     {
                         yield return new Position(i, j);
                     }
@@ -323,7 +322,7 @@ namespace AlphaBeta
 
             while (dx >= 0 && dx < Size && dy >= 0 && dy < Size)
             {
-                ReversiValue value = Table[dx][dy];
+                ReversiValue value = GetValue(dx, dy);
 
                 if (!opponentCellsCaptured)
                 {
@@ -370,19 +369,11 @@ namespace AlphaBeta
         /// <returns>Final score.</returns>
         private int GetScore()
         {
-            return Table.Sum(row => row.Sum(cell =>
-            {
-                switch (cell)
-                {
-                    case ReversiValue.Maximizing:
-                        return 1;
-                    case ReversiValue.Minimizing:
-                        return -1;
-                    case ReversiValue.Empty:
-                    default:
-                        return 0;
-                }
-            })) * VictoryPoints;
+            int occupiedCells = SparseBitcount(OccupiedCellsTable);
+            int maxPlayerCells = SparseBitcount(PlayersTable);
+            int minPlayerCells = occupiedCells - maxPlayerCells;
+
+            return (maxPlayerCells - minPlayerCells) * VictoryPoints;
         }
 
         /// <summary>
@@ -406,14 +397,62 @@ namespace AlphaBeta
             {
                 for (int j = 0; j < Size; ++j)
                 {
-                    if (StabilityTable[i][j])
+                    if (((StabilityTable >> i * Size + j) & 1UL) == 1UL)
                     {
-                        score += Table[i][j] == ReversiValue.Maximizing ? 1 : -1;
+                        score += GetValue(i, j) == ReversiValue.Maximizing ? 1 : -1;
                     }
                 }
             }
 
             return score * StabilityPoints;
+        }
+
+        /// <summary>
+        /// Gets the specific bit.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <param name="i">The row.</param>
+        /// <param name="j">The column.</param>
+        /// <returns>Bit value.</returns>
+        private static bool GetBit(ulong table, int i, int j)
+        {
+            return ((table >> i * Size + j) & 1UL) == 1UL;
+        }
+
+        /// <summary>
+        /// Sets the specific bit.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <param name="i">The row.</param>
+        /// <param name="j">The column.</param>
+        /// <param name="value">New value of the bit.</param>
+        private static void SetBit(ref ulong table, int i, int j, bool value)
+        {
+            if (value)
+            {
+                table |= 1UL << i * Size + j;
+            }
+            else
+            {
+                table &= ~(1UL << i * Size + j);
+            }
+        }
+
+        /// <summary>
+        /// Counts the number of set bits in an unsigned long.
+        /// </summary>
+        /// <param name="n">The n.</param>
+        /// <returns>Number of set bits.</returns>
+        private static int SparseBitcount(ulong n)
+        {
+            int count = 0;
+            while (n != 0)
+            {
+                count++;
+                n &= (n - 1);
+            }
+
+            return count;
         }
     }
 }
