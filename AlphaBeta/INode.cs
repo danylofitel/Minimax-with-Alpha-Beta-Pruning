@@ -10,6 +10,8 @@ namespace AlphaBeta
 {
     /// <summary>
     /// Interface for an immutable state of a zero-sum game for 2 players.
+    /// The node implements IComparable to allow sorting decisions in the search tree.
+    /// Default implementation of comparison would simply compare heuristic values.
     /// </summary>
     public interface INode : IComparable<INode>
     {

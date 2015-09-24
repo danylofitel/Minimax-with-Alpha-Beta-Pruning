@@ -9,6 +9,7 @@ using System.Linq;
 
 namespace AlphaBeta
 {
+    using System.Threading;
     using Position = Tuple<int, int>;
 
     /// <summary>
@@ -110,7 +111,7 @@ namespace AlphaBeta
             for (int i = 0; i < Size; ++i)
             {
                 Table[i] = new ReversiValue[Size];
-                StabilityTable = new bool[Size][];
+                StabilityTable[i] = new bool[Size];
             }
 
             int middle = Size / 2 - 1;
@@ -222,7 +223,18 @@ namespace AlphaBeta
             Position cell = move.Item1;
             table[cell.Item1][cell.Item2] = Player;
 
-            // TODO
+            foreach (Position direction in move.Item2)
+            {
+                int dx = cell.Item1 + direction.Item1;
+                int dy = cell.Item2 + direction.Item2;
+
+                while (dx >= 0 && dx < Size && dy >= 0 && dy < Size && table[dx][dy] == Opponent)
+                {
+                    table[dx][dy] = Player;
+                    dx += direction.Item1;
+                    dy += direction.Item2;
+                }
+            }
 
             return table;
         }
@@ -304,17 +316,14 @@ namespace AlphaBeta
         /// <returns>True if the move flips opponent's cells in given direction, false otherwise.</returns>
         private bool MoveCapturesDirection(Position move, Position direction)
         {
-            Position neighbor = new Position(
-                move.Item1 + direction.Item1,
-                move.Item2 + direction.Item2);
+            int dx = move.Item1 + direction.Item1;
+            int dy = move.Item2 + direction.Item2;
 
             bool opponentCellsCaptured = false;
 
-            while (
-                neighbor.Item1 >= 0 && neighbor.Item1 < Size &&
-                neighbor.Item1 >= 0 && neighbor.Item2 < Size)
+            while (dx >= 0 && dx < Size && dy >= 0 && dy < Size)
             {
-                ReversiValue value = Table[neighbor.Item1][neighbor.Item2];
+                ReversiValue value = Table[dx][dy];
 
                 if (!opponentCellsCaptured)
                 {
@@ -333,6 +342,9 @@ namespace AlphaBeta
                 {
                     return true;
                 }
+
+                dx += direction.Item1;
+                dy += direction.Item2;
             }
 
             return false;
@@ -392,7 +404,7 @@ namespace AlphaBeta
 
             for (int i = 0; i < Size; ++i)
             {
-                for (int j = 0; i < Size; ++j)
+                for (int j = 0; j < Size; ++j)
                 {
                     if (StabilityTable[i][j])
                     {

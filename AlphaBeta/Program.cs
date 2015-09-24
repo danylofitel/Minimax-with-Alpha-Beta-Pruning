@@ -10,6 +10,8 @@ namespace AlphaBeta
     {
         public static void Main(string[] args)
         {
+            AlphaBeta search = new AlphaBeta(new ReversiNode(), 5);
+            INode best = search.Best(true);
         }
     }
 }

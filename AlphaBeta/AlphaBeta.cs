@@ -4,7 +4,9 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AlphaBeta
 {
@@ -33,19 +35,26 @@ namespace AlphaBeta
         {
             INode bestNode = null;
             double bestValue = double.NegativeInfinity;
+
+            List<Task<Tuple<double, INode>>> tasks = new List<Task<Tuple<double, INode>>>();
             foreach (INode child in root.Children)
             {
-                double value = Search(
+                tasks.Add(Task.Run(() => new Tuple<double, INode>(Search(
                     child,
-                    5,
+                    searchDepth,
                     double.NegativeInfinity,
                     double.PositiveInfinity,
-                    !maximizing);
+                    !maximizing), child)));
+            }
 
-                if (child.Heuristics > bestValue)
+            Task.WaitAll(tasks.ToArray());
+
+            foreach (var result in tasks)
+            {
+                if (result.Result.Item1 > bestValue)
                 {
-                    bestNode = child;
-                    bestValue = child.Heuristics;
+                    bestNode = result.Result.Item2;
+                    bestValue = result.Result.Item1;
                 }
             }
 
