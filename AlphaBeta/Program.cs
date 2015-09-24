@@ -1,8 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿//-----------------------------------------------------------------------
+// <copyright file="Program.cs" author="Danylo Fitel">
+// </copyright>
+//-----------------------------------------------------------------------
+
+using System;
+using System.Diagnostics;
 
 namespace AlphaBeta
 {
@@ -10,8 +12,13 @@ namespace AlphaBeta
     {
         public static void Main(string[] args)
         {
-            AlphaBeta search = new AlphaBeta(new ReversiNode(), 5);
+            Stopwatch cw = new Stopwatch();
+            cw.Start();
+
+            AlphaBeta search = new AlphaBeta(new ReversiNode(), 6);
             INode best = search.Best(true);
+
+            Console.WriteLine(cw.ElapsedMilliseconds);
         }
     }
 }

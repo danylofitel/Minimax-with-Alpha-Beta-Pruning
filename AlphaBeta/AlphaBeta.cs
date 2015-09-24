@@ -41,7 +41,7 @@ namespace AlphaBeta
             {
                 tasks.Add(Task.Run(() => new Tuple<double, INode>(Search(
                     child,
-                    searchDepth,
+                    searchDepth - 1,
                     double.NegativeInfinity,
                     double.PositiveInfinity,
                     !maximizing), child)));

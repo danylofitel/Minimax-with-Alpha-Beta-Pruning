@@ -47,7 +47,9 @@
     <Compile Include="INode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReversiConstants.cs" />
     <Compile Include="ReversiNode.cs" />
+    <Compile Include="ReversiTable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
