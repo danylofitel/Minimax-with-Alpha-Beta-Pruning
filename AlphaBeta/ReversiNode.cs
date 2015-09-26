@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Position = System.Tuple<int, int>;
 
@@ -21,12 +22,14 @@ namespace AlphaBeta
         private readonly ReversiTable stateTable;
 
         /// <summary>
-        /// The children nodes.
+        /// The number of child nodes used by heuristics.
+        /// Initialized during the first computation of children
+        /// to avoid repetition when computing heuristics.
         /// </summary>
-        private readonly Lazy<IReadOnlyList<ReversiNode>> children;
+        private int? childrenCount = null;
 
         /// <summary>
-        /// Heuristics of current position.
+        /// The game state heuristics.
         /// </summary>
         private readonly Lazy<int> heuristics;
 
@@ -35,7 +38,7 @@ namespace AlphaBeta
         /// </summary>
         public ReversiNode() : this(
             new ReversiTable(ReversiConstants.OccupiedCellsBitMap, ReversiConstants.PlayersCellsBitMap, 0UL),
-            true)
+            ReversiValue.Maximizing)
         {
         }
 
@@ -44,25 +47,23 @@ namespace AlphaBeta
         /// </summary>
         /// <param name="table">The game state.</param>
         /// <param name="stabilityTable">The flags of stable cells.</param>
-        /// <param name="maximizing">Indicates whether it is maximizing player's turn.</param>
+        /// <param name="currentPlayer">Current player.</param>
         private ReversiNode(
             ReversiTable table,
-            bool maximizing)
+            ReversiValue currentPlayer)
         {
             stateTable = table;
-            Maximizing = maximizing;
 
-            Player = maximizing ? ReversiValue.Maximizing : ReversiValue.Minimizing;
-            Opponent = maximizing ? ReversiValue.Minimizing : ReversiValue.Maximizing;
+            Debug.Assert(currentPlayer != ReversiValue.Empty);
+            Player = currentPlayer;
+            Opponent = currentPlayer == ReversiValue.Maximizing
+                ? ReversiValue.Minimizing
+                : ReversiValue.Maximizing;
 
-            children = new Lazy<IReadOnlyList<ReversiNode>>(() => GetChildren());
+            // Will be initialized during first computation of child nodes.
+            childrenCount = null;
             heuristics = new Lazy<int>(() => GetHeuristics());
         }
-
-        /// <summary>
-        /// Gets a value indicating whether it is maximizing's player turn.
-        /// </summary>
-        public bool Maximizing { get; private set; }
 
         /// <summary>
         /// Gets the current player.
@@ -81,7 +82,11 @@ namespace AlphaBeta
         {
             get
             {
-                return children.Value;
+                // The children nodes are not saved after computation
+                // because of significant memory usage since unit the end
+                // of alpha-beta search all nodes in the tree are referenced
+                // and can't be garbage collected.
+                return GetChildren();
             }
         }
 
@@ -107,18 +112,49 @@ namespace AlphaBeta
         }
 
         /// <summary>
+        /// Initializes the number of children used by heuristics.
+        /// </summary>
+        public void InitializeChildren()
+        {
+            if (!childrenCount.HasValue)
+            {
+                GetChildren();
+            }
+        }
+
+        /// <summary>
         /// Computes all children nodes of current node.
         /// </summary>
         /// <returns>Children nodes.</returns>
         private IReadOnlyList<ReversiNode> GetChildren()
         {
-            return GetValidMoves().Select(move =>
+            var children = GetValidMoves().Select(move =>
             {
                 ReversiTable table = GetTableForMove(move);
                 ReversiTable stabilityTable = GetTableWithStabilityForMove(table, move);
 
-                return new ReversiNode(stabilityTable, !Maximizing);
-            }).ToList().AsReadOnly();
+                return new ReversiNode(stabilityTable, Opponent);
+            }).ToList();
+
+            // Check if it is a terminal node or if the current player passes.
+            if (children.Count == 0)
+            {
+                //TODO
+            }
+
+            // Initialize the children counter.
+            if (!childrenCount.HasValue)
+            {
+                lock (this)
+                {
+                    if (!childrenCount.HasValue)
+                    {
+                        childrenCount = children.Count;
+                    }
+                }
+            }
+
+            return children.AsReadOnly();
         }
 
         /// <summary>
@@ -256,7 +292,9 @@ namespace AlphaBeta
         /// <returns>Heuristic value of current position.</returns>
         private int GetHeuristics()
         {
-            if (Children.Count == 0)
+            InitializeChildren();
+
+            if (childrenCount == 0)
             {
                 return GetScore();
             }
@@ -283,7 +321,9 @@ namespace AlphaBeta
         /// <returns>Mobility heuristics.</returns>
         private int GetMobilityScore()
         {
-            return Children.Count * (Maximizing ? 1 : -1) * ReversiConstants.MobilityPoints;
+            return childrenCount.Value
+                * (Player == ReversiValue.Maximizing ? 1 : -1)
+                * ReversiConstants.MobilityPoints;
         }
 
         /// <summary>
