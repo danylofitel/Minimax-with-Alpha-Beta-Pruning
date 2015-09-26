@@ -128,6 +128,13 @@ namespace AlphaBeta
         /// <returns>Children nodes.</returns>
         private IReadOnlyList<ReversiNode> GetChildren()
         {
+            // If it has been computed previously that the node has no children,
+            // return empty list.
+            if (childrenCount.HasValue && childrenCount.Value == 0)
+            {
+                return new List<ReversiNode>().AsReadOnly();
+            }
+
             var children = GetValidMoves().Select(move =>
             {
                 ReversiTable table = GetTableForMove(move);
@@ -139,10 +146,14 @@ namespace AlphaBeta
             // Check if it is a terminal node or if the current player passes.
             if (children.Count == 0)
             {
-                //TODO
+                ReversiNode nextNode = new ReversiNode(stateTable, Opponent);
+                if (nextNode.Children.Count > 0)
+                {
+                    children.Add(nextNode);
+                }
             }
 
-            // Initialize the children counter.
+            // Initialize the children counter if the children have not been computed yet.
             if (!childrenCount.HasValue)
             {
                 lock (this)
