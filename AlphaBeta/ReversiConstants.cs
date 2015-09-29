@@ -29,6 +29,9 @@ namespace AlphaBeta
         Minimizing
     }
 
+    /// <summary>
+    /// Constants for Reversi game.
+    /// </summary>
     public static class ReversiConstants
     {
         /// <summary>
@@ -78,13 +81,32 @@ namespace AlphaBeta
         }.AsReadOnly();
 
         /// <summary>
-        /// 9 possible directions from any cell.
+        /// 8 possible directions from any cell.
         /// </summary>
         public static readonly IReadOnlyList<Position> Directions = new List<Position>
         {
-            new Position(-1, -1),    new Position(-1, 0),    new Position(-1, 1),
-            new Position(0, -1),     new Position(0, 0),     new Position(0, 1),
-            new Position(1, -1),     new Position(1, 0),     new Position(1, 1)
+            new Position(-1, -1),   new Position(-1, 0),    new Position(-1, 1),
+            new Position(0, -1),                            new Position(0, 1),
+            new Position(1, -1),    new Position(1, 0),     new Position(1, 1)
+        }.AsReadOnly();
+
+        /// <summary>
+        /// 4 directions in which the cell must be limited at least from one side with a stable cell
+        /// of the same color in order to be stable.
+        /// </summary>
+        public static readonly IReadOnlyList<Position> StabilityDirections = new List<Position>
+        {
+            // Horizontal.
+            new Position(0, 1),
+
+            // Vertical.
+            new Position(1, 0),
+
+            // Diagonal left-to-right.
+            new Position(1, 1),
+
+            // Diagonal right-to-left.
+            new Position(1, -1)
         }.AsReadOnly();
     }
 }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Position = System.Tuple<int, int>;
 
 namespace AlphaBeta
@@ -16,6 +17,11 @@ namespace AlphaBeta
     /// </summary>
     public class ReversiNode : INode
     {
+        /// <summary>
+        /// Indicates whether the current player can pass a move.
+        /// </summary>
+        private readonly bool canPass;
+
         /// <summary>
         /// The game state.
         /// </summary>
@@ -48,13 +54,17 @@ namespace AlphaBeta
         /// <param name="table">The game state.</param>
         /// <param name="stabilityTable">The flags of stable cells.</param>
         /// <param name="currentPlayer">Current player.</param>
+        /// <param name="canPass">Indicates whether the current player can pass a move.</param>
         private ReversiNode(
             ReversiTable table,
-            ReversiValue currentPlayer)
+            ReversiValue currentPlayer,
+            bool playerCanPass = true)
         {
+            canPass = playerCanPass;
             stateTable = table;
 
             Debug.Assert(currentPlayer != ReversiValue.Empty);
+
             Player = currentPlayer;
             Opponent = currentPlayer == ReversiValue.Maximizing
                 ? ReversiValue.Minimizing
@@ -102,6 +112,24 @@ namespace AlphaBeta
         }
 
         /// <summary>
+        /// Gets the cell value.
+        /// </summary>
+        /// <param name="row">The row.</param>
+        /// <param name="column">The column.</param>
+        /// <returns>The cell value.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">row, column;Row or column index out of range.</exception>
+        public ReversiValue GetValue(int row, int column)
+        {
+            if (row < 0 || row >= ReversiConstants.Size ||
+                column < 0 || column >= ReversiConstants.Size)
+            {
+                throw new ArgumentOutOfRangeException("row, column", "Row or column index out of range.");
+            }
+
+            return stateTable.GetValue(row, column);
+        }
+
+        /// <summary>
         /// Compares to another Reversi node.
         /// </summary>
         /// <param name="other">The other node to compare with.</param>
@@ -112,9 +140,82 @@ namespace AlphaBeta
         }
 
         /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance. Temporarily added for debugging purposes.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder("   ");
+            for (int i = 0; i < ReversiConstants.Size; ++i)
+            {
+                sb.Append($"{i} ");
+            }
+
+            sb.AppendLine();
+            for (int i = 0; i < ReversiConstants.Size; ++i)
+            {
+                sb.Append($"|{i}|");
+                for (int j = 0; j < ReversiConstants.Size; ++j)
+                {
+                    ReversiValue value = stateTable.GetValue(i, j);
+                    if (value == ReversiValue.Empty)
+                    {
+                        sb.Append('_');
+                    }
+                    else if (value == ReversiValue.Maximizing)
+                    {
+                        sb.Append('B');
+                    }
+                    else
+                    {
+                        sb.Append('W');
+                    }
+
+                    if (j < ReversiConstants.Size - 1)
+                    {
+                        sb.Append(" ");
+                    }
+                }
+
+                sb.Append('|');
+                sb.AppendLine();
+            }
+
+            sb.AppendLine();
+            for (int i = 0; i < ReversiConstants.Size; ++i)
+            {
+                sb.Append($"|{i}|");
+                for (int j = 0; j < ReversiConstants.Size; ++j)
+                {
+                    bool stable = stateTable.GetStable(i, j);
+                    if (stable)
+                    {
+                        sb.Append('S');
+                    }
+                    else
+                    {
+                        sb.Append(' ');
+                    }
+
+                    if (j < ReversiConstants.Size - 1)
+                    {
+                        sb.Append(" ");
+                    }
+                }
+
+                sb.Append('|');
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Initializes the number of children used by heuristics.
         /// </summary>
-        public void InitializeChildren()
+        private void InitializeChildren()
         {
             if (!childrenCount.HasValue)
             {
@@ -138,15 +239,16 @@ namespace AlphaBeta
             var children = GetValidMoves().Select(move =>
             {
                 ReversiTable table = GetTableForMove(move);
-                ReversiTable stabilityTable = GetTableWithStabilityForMove(table, move);
+                ReversiTable stabilityTable = UpdateStability(table);
 
                 return new ReversiNode(stabilityTable, Opponent);
             }).ToList();
 
-            // Check if it is a terminal node or if the current player passes.
-            if (children.Count == 0)
+            // Check whether it is a terminal node or whether the current player passes.
+            if (children.Count == 0 && canPass)
             {
-                ReversiNode nextNode = new ReversiNode(stateTable, Opponent);
+                ReversiNode nextNode = new ReversiNode(stateTable, Opponent, false);
+
                 if (nextNode.Children.Count > 0)
                 {
                     children.Add(nextNode);
@@ -205,10 +307,128 @@ namespace AlphaBeta
         /// <param name="tableAfterMove">Table after the move with original stability state.</param>
         /// <param name="move">The move.</param>
         /// <returns>The table after given move with updated stability values.</returns>
-        private ReversiTable GetTableWithStabilityForMove(ReversiTable tableAfterMove, Tuple<Position, IEnumerable<Position>> move)
+        private ReversiTable UpdateStability(ReversiTable tableAfterMove)
         {
-            // TODO
+            // Start with all currently unstable cells.
+            Queue<Position> unstableCells = new Queue<Position>(GetUnstableCells(tableAfterMove).ToList());
+
+            // Process all unstable cells.
+            while (unstableCells.Count > 0)
+            {
+                Position candidate = unstableCells.Dequeue();
+
+                if (!tableAfterMove.GetStable(candidate.Item1, candidate.Item2) &&
+                    IsStable(candidate, tableAfterMove))
+                {
+                    // Mark the cell as stable.
+                    tableAfterMove.SetStable(true, candidate.Item1, candidate.Item2);
+
+                    // All unstable neighbors need to be checked again.
+                    foreach (Position delta in ReversiConstants.Directions)
+                    {
+                        Position neighbor = new Position(candidate.Item1 + delta.Item1, candidate.Item2 + delta.Item2);
+                        if (neighbor.Item1 >= 0 && neighbor.Item1 < ReversiConstants.Size &&
+                            neighbor.Item2 >= 0 && neighbor.Item2 < ReversiConstants.Size &&
+                            tableAfterMove.GetValue(neighbor.Item1, neighbor.Item2) != ReversiValue.Empty &&
+                            !tableAfterMove.GetStable(neighbor.Item1, neighbor.Item2))
+                        {
+                            unstableCells.Enqueue(neighbor);
+                        }
+                    }
+                }
+            }
+
             return tableAfterMove;
+        }
+
+        /// <summary>
+        /// Gets the list of currently unstable occupied cells that are potentially stable.
+        /// </summary>
+        /// <param name="table">The table.</param>
+        /// <returns>The list of unstable cells.</returns>
+        private IEnumerable<Position> GetUnstableCells(ReversiTable table)
+        {
+            for (int i = 0; i < ReversiConstants.Size; ++i)
+            {
+                for (int j = 0; j < ReversiConstants.Size; ++j)
+                {
+                    if (table.GetValue(i, j) != ReversiValue.Empty && !table.GetStable(i, j))
+                    {
+                        yield return new Position(i, j);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the specified cell is stable.
+        /// </summary>
+        /// <param name="cell">The cell.</param>
+        /// <param name="table">The table.</param>
+        /// <returns>True if the cell is stable, false otherwise.</returns>
+        private bool IsStable(Position cell, ReversiTable table)
+        {
+            if (table.GetValue(cell.Item1, cell.Item2) == ReversiValue.Empty)
+            {
+                return false;
+            }
+
+            foreach (Position delta in ReversiConstants.StabilityDirections)
+            {
+                ReversiValue player = table.GetValue(cell.Item1, cell.Item2);
+                Position positive = new Position(cell.Item1 + delta.Item1, cell.Item2 + delta.Item2);
+                Position negative = new Position(cell.Item1 - delta.Item1, cell.Item2 - delta.Item2);
+
+                // If one of the cell is on the edge, the direction is stable.
+                if (positive.Item1 < 0 || positive.Item1 >= ReversiConstants.Size ||
+                    positive.Item2 < 0 || positive.Item2 >= ReversiConstants.Size ||
+                    negative.Item1 < 0 || negative.Item1 >= ReversiConstants.Size ||
+                    negative.Item2 < 0 || negative.Item2 >= ReversiConstants.Size)
+                {
+                    continue;
+                }
+
+                // If at least one of the neighbors is a stable cell belonging to the same player,
+                // the direction is stable.
+                if ((table.GetStable(positive.Item1, positive.Item2) &&
+                        table.GetValue(positive.Item1, positive.Item2) == player) ||
+                    (table.GetStable(negative.Item1, negative.Item2) &&
+                        table.GetValue(negative.Item1, negative.Item2) == player))
+                {
+                    continue;
+                }
+
+                // If all cells in the line of direction are filled, the direction is stable.
+                do
+                {
+                    if (table.GetValue(positive.Item1, positive.Item2) == ReversiValue.Empty)
+                    {
+                        return false;
+                    }
+
+                    positive = new Position(positive.Item1 + delta.Item1, positive.Item2 + delta.Item2);
+                }
+                while (positive.Item1 >= 0 && positive.Item1 < ReversiConstants.Size &&
+                    positive.Item2 >= 0 && positive.Item2 < ReversiConstants.Size);
+
+                do
+                {
+                    if (table.GetValue(negative.Item1, negative.Item2) == ReversiValue.Empty)
+                    {
+                        return false;
+                    }
+
+                    negative = new Position(negative.Item1 - delta.Item1, negative.Item2 - delta.Item2);
+                }
+                while (negative.Item1 >= 0 && negative.Item1 < ReversiConstants.Size &&
+                    negative.Item2 >= 0 && negative.Item2 < ReversiConstants.Size);
+
+                // The line is filled.
+                return true;
+            }
+
+            // No unstable directions found.
+            return true;
         }
 
         /// <summary>
@@ -219,8 +439,8 @@ namespace AlphaBeta
         {
             foreach (Position cell in GetFreeCells())
             {
-                IEnumerable<Position> capturedDirections = GetDirectionsCapturedByMove(cell);
-                if (capturedDirections.Any())
+                IList<Position> capturedDirections = GetDirectionsCapturedByMove(cell).ToList();
+                if (capturedDirections.Count > 0)
                 {
                     yield return new Tuple<Position, IEnumerable<Position>>(cell, capturedDirections);
                 }
@@ -274,17 +494,21 @@ namespace AlphaBeta
 
                 if (!opponentCellsCaptured)
                 {
-                    if (value == ReversiValue.Empty)
-                    {
-                        return false;
-                    }
-                    else if (value == Opponent)
+                    if (value == Opponent)
                     {
                         opponentCellsCaptured = true;
                         continue;
                     }
+                    else
+                    {
+                        return false;
+                    }
                 }
 
+                if (value == ReversiValue.Empty)
+                {
+                    return false;
+                }
                 if (value == Player)
                 {
                     return true;

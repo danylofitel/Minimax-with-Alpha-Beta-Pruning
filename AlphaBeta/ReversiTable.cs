@@ -64,8 +64,7 @@ namespace AlphaBeta
         /// <param name="column">The column.</param>
         public void SetValue(ReversiValue value, int row, int column)
         {
-            int index = row * ReversiConstants.Size + column;
-            ulong mask = (1UL << index);
+            ulong mask = 1UL << (row * ReversiConstants.Size + column);
 
             if (value == ReversiValue.Empty)
             {
@@ -105,8 +104,7 @@ namespace AlphaBeta
         /// <param name="column">The column.</param>
         public void SetStable(bool value, int row, int column)
         {
-            int index = row * ReversiConstants.Size;
-            ulong mask = (1UL << index);
+            ulong mask = 1UL << (row * ReversiConstants.Size + column);
 
             if (value)
             {

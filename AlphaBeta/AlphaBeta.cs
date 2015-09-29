@@ -12,27 +12,25 @@ namespace AlphaBeta
 {
     public class AlphaBeta
     {
-        private readonly INode root;
         private readonly uint searchDepth;
 
-        public AlphaBeta(INode initialState, uint depth)
+        public AlphaBeta(uint depth)
         {
-            if (initialState == null)
-            {
-                throw new ArgumentNullException(nameof(initialState), "Null initial state.");
-            }
-
             if (depth == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(depth), depth, "Zero depth.");
             }
 
-            root = initialState;
             searchDepth = depth;
         }
 
-        public INode Best(bool maximizing)
+        public INode Best(INode root, bool maximizing)
         {
+            if (root == null)
+            {
+                throw new ArgumentNullException(nameof(root), "Null node.");
+            }
+
             INode bestNode = null;
             double bestValue = double.NegativeInfinity;
 
@@ -51,7 +49,7 @@ namespace AlphaBeta
 
             foreach (var result in tasks)
             {
-                if (result.Result.Item1 > bestValue)
+                if ((maximizing ? 1 : -1) * result.Result.Item1 > bestValue)
                 {
                     bestNode = result.Result.Item2;
                     bestValue = result.Result.Item1;
