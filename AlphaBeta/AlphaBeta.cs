@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AlphaBeta
 {
-    public class AlphaBeta
+    public class AlphaBeta<Node> where Node : INode
     {
         private readonly uint searchDepth;
 
@@ -24,20 +24,17 @@ namespace AlphaBeta
             searchDepth = depth;
         }
 
-        public INode Best(INode root, bool maximizing)
+        public Node Best(Node root, bool maximizing)
         {
             if (root == null)
             {
                 throw new ArgumentNullException(nameof(root), "Null node.");
             }
 
-            INode bestNode = null;
-            double bestValue = double.NegativeInfinity;
-
-            List<Task<Tuple<double, INode>>> tasks = new List<Task<Tuple<double, INode>>>();
-            foreach (INode child in root.Children)
+            List<Task<Tuple<double, Node>>> tasks = new List<Task<Tuple<double, Node>>>();
+            foreach (Node child in root.Children)
             {
-                tasks.Add(Task.Run(() => new Tuple<double, INode>(Search(
+                tasks.Add(Task.Run(() => new Tuple<double, Node>(Search(
                     child,
                     searchDepth - 1,
                     double.NegativeInfinity,
@@ -47,37 +44,57 @@ namespace AlphaBeta
 
             Task.WaitAll(tasks.ToArray());
 
-            foreach (var result in tasks)
+            if (maximizing)
             {
-                if ((maximizing ? 1 : -1) * result.Result.Item1 > bestValue)
-                {
-                    bestNode = result.Result.Item2;
-                    bestValue = result.Result.Item1;
-                }
-            }
+                Node bestNode = default(Node);
+                double bestValue = double.NegativeInfinity;
 
-            return bestNode;
+                foreach (var result in tasks)
+                {
+                    if (result.Result.Item1 > bestValue)
+                    {
+                        bestNode = result.Result.Item2;
+                        bestValue = result.Result.Item1;
+                    }
+                }
+
+                return bestNode;
+            }
+            else
+            {
+                Node bestNode = default(Node);
+                double bestValue = double.PositiveInfinity;
+
+                foreach (var result in tasks)
+                {
+                    if (result.Result.Item1 < bestValue)
+                    {
+                        bestNode = result.Result.Item2;
+                        bestValue = result.Result.Item1;
+                    }
+                }
+
+                return bestNode;
+            }
         }
 
         private double Search(
-            INode node,
+            Node node,
             uint depth,
             double alpha,
             double beta,
             bool maximizing)
         {
-            double currentValue = node.Heuristics;
-
             if (depth == 0 || !node.Children.Any())
             {
-                return currentValue;
+                return node.Heuristics;
             }
 
             if (maximizing)
             {
                 double value = double.NegativeInfinity;
 
-                foreach (INode child in node.Children)
+                foreach (Node child in node.Children)
                 {
                     value = Math.Max(value, Search(child, depth - 1, alpha, beta, false));
                     alpha = Math.Max(alpha, value);
@@ -94,7 +111,7 @@ namespace AlphaBeta
             {
                 double value = double.PositiveInfinity;
 
-                foreach (INode child in node.Children)
+                foreach (Node child in node.Children)
                 {
                     value = Math.Min(value, Search(child, depth - 1, alpha, beta, true));
                     beta = Math.Min(beta, value);

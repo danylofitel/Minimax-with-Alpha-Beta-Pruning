@@ -13,7 +13,7 @@ namespace AlphaBeta
     {
         public static void Main(string[] args)
         {
-            AlphaBeta search = new AlphaBeta(3);
+            AlphaBeta<ReversiNode> search = new AlphaBeta<ReversiNode>(5);
             ReversiNode state = new ReversiNode();
 
             bool player = true;
@@ -41,11 +41,11 @@ namespace AlphaBeta
                     //{
                     //    state = moves.First();
                     //}
-                    state = (ReversiNode)search.Best(state, true);
+                    state = search.Best(state, state.Player == ReversiValue.Maximizing);
                 }
                 else
                 {
-                    state = (ReversiNode)search.Best(state, false);
+                    state = search.Best(state, state.Player == ReversiValue.Maximizing);
                 }
 
                 player = !player;

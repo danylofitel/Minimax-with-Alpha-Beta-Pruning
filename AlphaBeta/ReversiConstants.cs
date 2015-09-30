@@ -47,16 +47,11 @@ namespace AlphaBeta
         /// <summary>
         /// Gets the stability points per cell.
         /// </summary>
-        public static int StabilityPoints { get; } = 25;
-
-        /// <summary>
-        /// Gets the corner points per each corner cell.
-        /// </summary>
-        public static int CornerPoints { get; } = 50;
+        public static int StabilityPoints { get; } = 100;
 
         /// <summary>
         /// Gets the victory points.
-        /// 64 * (5 + 25) + 4 * 50 = 2,120 is significantly less than 1,000,000
+        /// 64 * (Mobility + Stability) is significantly less than Victory
         /// </summary>
         public static int VictoryPoints { get; } = 1000000;
 

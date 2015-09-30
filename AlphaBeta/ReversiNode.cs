@@ -183,32 +183,6 @@ namespace AlphaBeta
                 sb.AppendLine();
             }
 
-            sb.AppendLine();
-            for (int i = 0; i < ReversiConstants.Size; ++i)
-            {
-                sb.Append($"|{i}|");
-                for (int j = 0; j < ReversiConstants.Size; ++j)
-                {
-                    bool stable = stateTable.GetStable(i, j);
-                    if (stable)
-                    {
-                        sb.Append('S');
-                    }
-                    else
-                    {
-                        sb.Append(' ');
-                    }
-
-                    if (j < ReversiConstants.Size - 1)
-                    {
-                        sb.Append(" ");
-                    }
-                }
-
-                sb.Append('|');
-                sb.AppendLine();
-            }
-
             return sb.ToString();
         }
 
@@ -424,7 +398,7 @@ namespace AlphaBeta
                     negative.Item2 >= 0 && negative.Item2 < ReversiConstants.Size);
 
                 // The line is filled.
-                return true;
+                continue;
             }
 
             // No unstable directions found.

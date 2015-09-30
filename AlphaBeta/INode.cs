@@ -21,7 +21,8 @@ namespace AlphaBeta
         IReadOnlyList<INode> Children { get; }
 
         /// <summary>
-        /// Gets the heuristics value of current position.
+        /// Gets the heuristics value of current position
+        /// from maximizing player's perspective.
         /// </summary>
         int Heuristics { get; }
     }
