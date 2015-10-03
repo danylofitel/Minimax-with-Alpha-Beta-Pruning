@@ -10,10 +10,21 @@ using System.Threading.Tasks;
 
 namespace AlphaBeta
 {
+    /// <summary>
+    /// Implementation of minimax search with alpha-beta pruning.
+    /// </summary>
+    /// <typeparam name="Node">Search node.</typeparam>
     public class AlphaBeta<Node> where Node : INode
     {
+        /// <summary>
+        /// The maximum search depth.
+        /// </summary>
         private readonly uint searchDepth;
 
+        /// <summary>
+        /// Constructs the search class for specific depth.
+        /// </summary>
+        /// <param name="depth">Search depth.</param>
         public AlphaBeta(uint depth)
         {
             if (depth == 0)
@@ -24,6 +35,12 @@ namespace AlphaBeta
             searchDepth = depth;
         }
 
+        /// <summary>
+        /// Performs minimax search and returns the best child node.
+        /// </summary>
+        /// <param name="root">Initial state.</param>
+        /// <param name="maximizing">Player making move, true if maximizing.</param>
+        /// <returns>The best child node.</returns>
         public Node Best(Node root, bool maximizing)
         {
             if (root == null)
@@ -78,6 +95,15 @@ namespace AlphaBeta
             }
         }
 
+        /// <summary>
+        /// Minimax search with alpha-beta pruning.
+        /// </summary>
+        /// <param name="node">Initial node.</param>
+        /// <param name="depth">Search depth.</param>
+        /// <param name="alpha">Alpha value.</param>
+        /// <param name="beta">Beta value.</param>
+        /// <param name="maximizing">Current player.</param>
+        /// <returns>Heuristic value of current node for current player.</returns>
         private double Search(
             Node node,
             uint depth,

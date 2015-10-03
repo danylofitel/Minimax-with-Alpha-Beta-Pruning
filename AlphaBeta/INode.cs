@@ -16,6 +16,16 @@ namespace AlphaBeta
     public interface INode : IComparable<INode>
     {
         /// <summary>
+        /// Gets the current player.
+        /// </summary>
+        Value Player { get; }
+
+        /// <summary>
+        /// Gets the opponent of current player.
+        /// </summary>
+        Value Opponent { get; }
+
+        /// <summary>
         /// Gets the list of children nodes.
         /// </summary>
         IReadOnlyList<INode> Children { get; }

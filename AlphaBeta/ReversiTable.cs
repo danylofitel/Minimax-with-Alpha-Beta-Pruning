@@ -31,12 +31,37 @@ namespace AlphaBeta
         /// <param name="occupiedCellsTable">The occupied cells table.</param>
         /// <param name="playersTable">The players table.</param>
         /// <param name="stabilityTable">The stability table.</param>
-        public ReversiTable(ulong occupiedCellsTable, ulong playersTable, ulong stabilityTable)
+        public static ReversiTable InitialState()
         {
-            OccupiedCellsTable = occupiedCellsTable;
-            PlayersTable = playersTable;
-            StabilityTable = stabilityTable;
+            ReversiTable table = new ReversiTable();
+
+            table.OccupiedCellsTable = OccupiedCellsBitMap;
+            table.PlayersTable = PlayersCellsBitMap;
+            table.StabilityTable = StabilityCellsBitMap;
+
+            return table;
         }
+
+        /// <summary>
+        /// Gets the length and width of the board. 8 is the classic version.
+        /// </summary>
+        public static int Size { get; } = 8;
+
+        /// <summary>
+        /// Gets the table of occupied cells at starting position in a form of bit map.
+        /// </summary>
+        private static ulong OccupiedCellsBitMap { get; } = 0x1818000000UL;
+
+        /// <summary>
+        /// Gets the table of cells values at starting position in a form of bit map,
+        /// 1 stands for maximizing player's cell.
+        /// </summary>
+        private static ulong PlayersCellsBitMap { get; } = 0x810000000UL;
+
+        /// <summary>
+        /// Gets the table of cell stability values at starting position in a form of bit map.
+        /// </summary>
+        private static ulong StabilityCellsBitMap { get; } = 0x0UL;
 
         /// <summary>
         /// Gets the value by coordinates.
@@ -44,16 +69,16 @@ namespace AlphaBeta
         /// <param name="row">The row.</param>
         /// <param name="column">The column.</param>
         /// <returns>Cell value.</returns>
-        public ReversiValue GetValue(int row, int column)
+        public Value GetValue(int row, int column)
         {
-            if (((OccupiedCellsTable >> row * ReversiConstants.Size + column) & 1UL) == 1UL)
+            if (((OccupiedCellsTable >> row * Size + column) & 1UL) == 1UL)
             {
-                return ((PlayersTable >> row * ReversiConstants.Size + column) & 1UL) == 1UL
-                    ? ReversiValue.Maximizing
-                    : ReversiValue.Minimizing;
+                return ((PlayersTable >> row * Size + column) & 1UL) == 1UL
+                    ? Value.Maximizing
+                    : Value.Minimizing;
             }
 
-            return ReversiValue.Empty;
+            return Value.Empty;
         }
 
         /// <summary>
@@ -62,11 +87,11 @@ namespace AlphaBeta
         /// <param name="value">The value.</param>
         /// <param name="row">The row.</param>
         /// <param name="column">The column.</param>
-        public void SetValue(ReversiValue value, int row, int column)
+        public void SetValue(Value value, int row, int column)
         {
-            ulong mask = 1UL << (row * ReversiConstants.Size + column);
+            ulong mask = 1UL << (row * Size + column);
 
-            if (value == ReversiValue.Empty)
+            if (value == Value.Empty)
             {
                 OccupiedCellsTable &= ~mask;
                 PlayersTable &= ~mask;
@@ -74,7 +99,7 @@ namespace AlphaBeta
             else
             {
                 OccupiedCellsTable |= mask;
-                if (value == ReversiValue.Maximizing)
+                if (value == Value.Maximizing)
                 {
                     PlayersTable |= mask;
                 }
@@ -93,7 +118,7 @@ namespace AlphaBeta
         /// <returns>Cell stability value.</returns>
         public bool GetStable(int row, int column)
         {
-            return ((StabilityTable >> row * ReversiConstants.Size + column) & 1UL) == 1UL;
+            return ((StabilityTable >> row * Size + column) & 1UL) == 1UL;
         }
 
         /// <summary>
@@ -104,7 +129,7 @@ namespace AlphaBeta
         /// <param name="column">The column.</param>
         public void SetStable(bool value, int row, int column)
         {
-            ulong mask = 1UL << (row * ReversiConstants.Size + column);
+            ulong mask = 1UL << (row * Size + column);
 
             if (value)
             {
