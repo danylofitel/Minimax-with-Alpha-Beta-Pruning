@@ -47,7 +47,7 @@ namespace AlphaBeta
                     : Value.Minimizing;
             }
 
-            return Value.Empty;
+            return Value.None;
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace AlphaBeta
             uint freeCellsMask = 1U << index;
             uint valuesMask = 1U << (index + CellCount);
 
-            if (value == Value.Empty)
+            if (value == Value.None)
             {
                 table &= ~freeCellsMask;
                 table &= ~valuesMask;

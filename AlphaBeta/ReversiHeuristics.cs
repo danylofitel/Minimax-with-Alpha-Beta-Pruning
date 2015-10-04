@@ -39,7 +39,7 @@ namespace AlphaBeta
                         Position neighbor = new Position(candidate.Item1 + delta.Item1, candidate.Item2 + delta.Item2);
                         if (neighbor.Item1 >= 0 && neighbor.Item1 < ReversiTable.Size &&
                             neighbor.Item2 >= 0 && neighbor.Item2 < ReversiTable.Size &&
-                            table.GetValue(neighbor.Item1, neighbor.Item2) != Value.Empty &&
+                            table.GetValue(neighbor.Item1, neighbor.Item2) != Value.None &&
                             !table.GetStable(neighbor.Item1, neighbor.Item2))
                         {
                             unstableCells.Enqueue(neighbor);
@@ -62,7 +62,7 @@ namespace AlphaBeta
             {
                 for (int j = 0; j < ReversiTable.Size; ++j)
                 {
-                    if (table.GetValue(i, j) != Value.Empty && !table.GetStable(i, j))
+                    if (table.GetValue(i, j) != Value.None && !table.GetStable(i, j))
                     {
                         yield return new Position(i, j);
                     }
@@ -78,7 +78,7 @@ namespace AlphaBeta
         /// <returns>True if the cell is stable, false otherwise.</returns>
         public static bool IsStable(this ReversiTable table, Position cell)
         {
-            if (table.GetValue(cell.Item1, cell.Item2) == Value.Empty)
+            if (table.GetValue(cell.Item1, cell.Item2) == Value.None)
             {
                 return false;
             }
@@ -111,7 +111,7 @@ namespace AlphaBeta
                 // If all cells in the line of direction are filled, the direction is stable.
                 do
                 {
-                    if (table.GetValue(positive.Item1, positive.Item2) == Value.Empty)
+                    if (table.GetValue(positive.Item1, positive.Item2) == Value.None)
                     {
                         return false;
                     }
@@ -123,7 +123,7 @@ namespace AlphaBeta
 
                 do
                 {
-                    if (table.GetValue(negative.Item1, negative.Item2) == Value.Empty)
+                    if (table.GetValue(negative.Item1, negative.Item2) == Value.None)
                     {
                         return false;
                     }

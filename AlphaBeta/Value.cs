@@ -11,9 +11,9 @@ namespace AlphaBeta
     public enum Value
     {
         /// <summary>
-        /// The empty cell.
+        /// Not specified player or empty cell.
         /// </summary>
-        Empty,
+        None,
 
         /// <summary>
         /// The maximizing player which starts the game.

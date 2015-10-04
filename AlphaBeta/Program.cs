@@ -4,7 +4,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace AlphaBeta
@@ -13,94 +12,28 @@ namespace AlphaBeta
     {
         public static void Main(string[] args)
         {
-            ReversiDemo();
+            AlphaBetaDemo(new TicTacToeNode(), 9U);
+            AlphaBetaDemo(new ReversiNode(), 5U);
         }
 
-        private static void TicTacToeDemo()
+        private static void AlphaBetaDemo<Node>(Node state, uint depth) where Node : INode
         {
-            AlphaBeta<TicTacToeNode> search = new AlphaBeta<TicTacToeNode>(9);
-            TicTacToeNode state = new TicTacToeNode();
+            AlphaBeta<Node> search = new AlphaBeta<Node>(depth);
 
-            bool maximizing = true;
-            while (true)
+            while (state.Children.Any())
             {
                 Console.WriteLine(state);
-
-                if (state.Children.Any())
-                {
-                    state = search.Best(state, maximizing);
-                    maximizing = !maximizing;
-                }
-                else
-                {
-                    Value winner = state.Heuristics > 0 ? Value.Maximizing
-                        : state.Heuristics < 0 ? Value.Minimizing
-                        : Value.Empty;
-                    Console.WriteLine($"Game over. Winner: {winner}.");
-                    return;
-                }
+                state = search.Best(state);
             }
-        }
 
-        private static void ReversiDemo()
-        {
-            AlphaBeta<ReversiNode> search = new AlphaBeta<ReversiNode>(6);
-            ReversiNode state = new ReversiNode();
+            Console.WriteLine(state);
 
-            bool maximizing = true;
-            while (true)
-            {
-                Console.WriteLine(state);
+            Value winner = state.Heuristics > 0 ? Value.Maximizing
+                : state.Heuristics < 0 ? Value.Minimizing
+                : Value.None;
 
-                IReadOnlyList<ReversiNode> children = state.Children
-                    .Select(node => node as ReversiNode)
-                    .ToList().AsReadOnly();
-                if (children.Count == 0)
-                {
-                    if (state.Heuristics > 0)
-                    {
-                        Console.WriteLine("Black won.");
-                    }
-                    else if (state.Heuristics < 0)
-                    {
-                        Console.WriteLine("White won.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("It's a tie.");
-                    }
-
-                    return;
-                }
-
-                if (maximizing)
-                {
-                    //do
-                    //{
-                    //    Console.WriteLine("Your move");
-                    //    string input = Console.ReadLine();
-                    //    int row = int.Parse(input.Substring(0, 1));
-                    //    int column = int.Parse(input.Substring(1, 1));
-
-                    //    var moves = children.ToList();
-                    //    if (moves.Count == 1)
-                    //    {
-                    //        state = moves.First();
-                    //    }
-
-                    //    state = children.FirstOrDefault(node =>
-                    //        node.GetValue(row, column) == ReversiValue.Maximizing);
-                    //} while (state == null);
-
-                    state = search.Best(state, state.Player == Value.Maximizing);
-                }
-                else
-                {
-                    state = search.Best(state, state.Player == Value.Maximizing);
-                }
-
-                maximizing = !maximizing;
-            }
+            Console.WriteLine($"Game over. Winner: {winner}.");
+            Console.WriteLine();
         }
     }
 }

@@ -39,14 +39,19 @@ namespace AlphaBeta
         /// Performs minimax search and returns the best child node.
         /// </summary>
         /// <param name="root">Initial state.</param>
-        /// <param name="maximizing">Player making move, true if maximizing.</param>
         /// <returns>The best child node.</returns>
-        public Node Best(Node root, bool maximizing)
+        public Node Best(Node root)
         {
             if (root == null)
             {
                 throw new ArgumentNullException(nameof(root), "Null node.");
             }
+            else if (root.Player == Value.None)
+            {
+                throw new ArgumentException(nameof(root.Player), "The player is not specified.");
+            }
+
+            bool maximizing = root.Player == Value.Maximizing;
 
             List<Task<Tuple<double, Node>>> tasks = new List<Task<Tuple<double, Node>>>();
             foreach (Node child in root.Children)
@@ -61,9 +66,9 @@ namespace AlphaBeta
 
             Task.WaitAll(tasks.ToArray());
 
+            Node bestNode = default(Node);
             if (maximizing)
             {
-                Node bestNode = default(Node);
                 double bestValue = double.NegativeInfinity;
 
                 foreach (var result in tasks)
@@ -74,12 +79,9 @@ namespace AlphaBeta
                         bestValue = result.Result.Item1;
                     }
                 }
-
-                return bestNode;
             }
             else
             {
-                Node bestNode = default(Node);
                 double bestValue = double.PositiveInfinity;
 
                 foreach (var result in tasks)
@@ -90,9 +92,9 @@ namespace AlphaBeta
                         bestValue = result.Result.Item1;
                     }
                 }
-
-                return bestNode;
             }
+
+            return bestNode;
         }
 
         /// <summary>

@@ -68,7 +68,7 @@ namespace AlphaBeta
             children = new Lazy<IReadOnlyList<ReversiNode>>(() => GetChildren(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            Debug.Assert(currentPlayer != Value.Empty);
+            Debug.Assert(currentPlayer != Value.None);
             Player = currentPlayer;
             Opponent = currentPlayer == Value.Maximizing
                 ? Value.Minimizing
@@ -156,7 +156,7 @@ namespace AlphaBeta
                 for (int j = 0; j < ReversiTable.Size; ++j)
                 {
                     Value value = stateTable.GetValue(i, j);
-                    if (value == Value.Empty)
+                    if (value == Value.None)
                     {
                         sb.Append('-');
                     }
@@ -268,7 +268,7 @@ namespace AlphaBeta
             {
                 for (int j = 0; j < ReversiTable.Size; ++j)
                 {
-                    if (stateTable.GetValue(i, j) == Value.Empty)
+                    if (stateTable.GetValue(i, j) == Value.None)
                     {
                         yield return new Position(i, j);
                     }
@@ -296,7 +296,7 @@ namespace AlphaBeta
         /// <returns>True if the move flips opponent's cells in given direction, false otherwise.</returns>
         private bool MoveCapturesDirection(Value player, Position move, Position direction)
         {
-            Debug.Assert(player != Value.Empty);
+            Debug.Assert(player != Value.None);
             Value opponent = player == Value.Maximizing
                 ? Value.Minimizing
                 : Value.Maximizing;
@@ -323,7 +323,7 @@ namespace AlphaBeta
                     }
                 }
 
-                if (value == Value.Empty)
+                if (value == Value.None)
                 {
                     return false;
                 }

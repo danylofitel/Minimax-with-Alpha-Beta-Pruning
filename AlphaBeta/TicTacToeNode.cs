@@ -63,7 +63,7 @@ namespace AlphaBeta
             heuristics = new Lazy<int>(() => GetHeuristics(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            Debug.Assert(player != Value.Empty);
+            Debug.Assert(player != Value.None);
 
             Player = player;
             Opponent = player == Value.Maximizing
@@ -134,7 +134,7 @@ namespace AlphaBeta
                 for (int j = 0; j < TicTacToeTable.Size; ++j)
                 {
                     Value value = stateTable.GetValue(i, j);
-                    if (value == Value.Empty)
+                    if (value == Value.None)
                     {
                         sb.Append('-');
                     }
@@ -166,7 +166,7 @@ namespace AlphaBeta
         /// <returns>The list of child nodes.</returns>
         private IReadOnlyList<TicTacToeNode> GetChildren()
         {
-            if (winner.Value != Value.Empty)
+            if (winner.Value != Value.None)
             {
                 return new List<TicTacToeNode>().AsReadOnly();
             }
@@ -187,7 +187,7 @@ namespace AlphaBeta
             {
                 for (int j = 0; j < TicTacToeTable.Size; ++j)
                 {
-                    if (stateTable.GetValue(i, j) == Value.Empty)
+                    if (stateTable.GetValue(i, j) == Value.None)
                     {
                         yield return new Position(i, j);
                     }
@@ -202,13 +202,13 @@ namespace AlphaBeta
         private Value IsFinished()
         {
             Value rows = RowFilled();
-            if (rows != Value.Empty)
+            if (rows != Value.None)
             {
                 return rows;
             }
 
             Value columns = ColumnFilled();
-            if (columns != Value.Empty)
+            if (columns != Value.None)
             {
                 return columns;
             }
@@ -225,22 +225,22 @@ namespace AlphaBeta
             for (int row = 0; row < TicTacToeTable.Size; ++row)
             {
                 Value first = stateTable.GetValue(row, 0);
-                for (int column = 1; first != Value.Empty && column < TicTacToeTable.Size; ++column)
+                for (int column = 1; first != Value.None && column < TicTacToeTable.Size; ++column)
                 {
                     if (stateTable.GetValue(row, column) != first)
                     {
-                        first = Value.Empty;
+                        first = Value.None;
                     }
                 }
 
-                if (first != Value.Empty)
+                if (first != Value.None)
                 {
                     return first;
                 }
             }
 
             // No filled rows found.
-            return Value.Empty;
+            return Value.None;
         }
 
         /// <summary>
@@ -253,22 +253,22 @@ namespace AlphaBeta
             {
                 Value first = stateTable.GetValue(0, column);
 
-                for (int row = 1; first != Value.Empty && row < TicTacToeTable.Size; ++row)
+                for (int row = 1; first != Value.None && row < TicTacToeTable.Size; ++row)
                 {
                     if (stateTable.GetValue(row, column) != first)
                     {
-                        first = Value.Empty;
+                        first = Value.None;
                     }
                 }
 
-                if (first != Value.Empty)
+                if (first != Value.None)
                 {
                     return first;
                 }
             }
 
             // No filled columns found.
-            return Value.Empty;
+            return Value.None;
         }
 
         /// <summary>
@@ -278,25 +278,25 @@ namespace AlphaBeta
         private Value DiagonalFilled()
         {
             Value first = stateTable.GetValue(0, 0);
-            for (int i = 1; first != Value.Empty && i < TicTacToeTable.Size; ++i)
+            for (int i = 1; first != Value.None && i < TicTacToeTable.Size; ++i)
             {
                 if (stateTable.GetValue(i, i) != first)
                 {
-                    first = Value.Empty;
+                    first = Value.None;
                 }
             }
 
-            if (first != Value.Empty)
+            if (first != Value.None)
             {
                 return first;
             }
 
             first = stateTable.GetValue(0, TicTacToeTable.Size - 1);
-            for (int i = 1; first != Value.Empty && i < TicTacToeTable.Size; ++i)
+            for (int i = 1; first != Value.None && i < TicTacToeTable.Size; ++i)
             {
                 if (stateTable.GetValue(i, TicTacToeTable.Size - i - 1) != first)
                 {
-                    first = Value.Empty;
+                    first = Value.None;
                 }
             }
 

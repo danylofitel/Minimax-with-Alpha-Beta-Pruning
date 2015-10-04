@@ -78,7 +78,7 @@ namespace AlphaBeta
                     : Value.Minimizing;
             }
 
-            return Value.Empty;
+            return Value.None;
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace AlphaBeta
         {
             ulong mask = 1UL << (row * Size + column);
 
-            if (value == Value.Empty)
+            if (value == Value.None)
             {
                 OccupiedCellsTable &= ~mask;
                 PlayersTable &= ~mask;
