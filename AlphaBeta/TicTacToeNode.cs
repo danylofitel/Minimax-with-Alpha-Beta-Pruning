@@ -201,106 +201,29 @@ namespace AlphaBeta
         /// <returns>True if the game is over.</returns>
         private Value IsFinished()
         {
-            Value rows = RowFilled();
-            if (rows != Value.None)
+            // Check if at least one line is filled by the same player.
+            foreach (var line in TicTacToeConstants.Lines)
             {
-                return rows;
-            }
+                Position first = line[0];
+                Value current = stateTable.GetValue(first.Item1, first.Item2);
 
-            Value columns = ColumnFilled();
-            if (columns != Value.None)
-            {
-                return columns;
-            }
-
-            return DiagonalFilled();
-        }
-
-        /// <summary>
-        /// Checks if any row is filled.
-        /// </summary>
-        /// <returns>True if at least one row is filled.</returns>
-        private Value RowFilled()
-        {
-            for (int row = 0; row < TicTacToeTable.Size; ++row)
-            {
-                Value first = stateTable.GetValue(row, 0);
-                for (int column = 1; first != Value.None && column < TicTacToeTable.Size; ++column)
+                for (int i = 1; current != Value.None && i < TicTacToeTable.Size; ++i)
                 {
-                    if (stateTable.GetValue(row, column) != first)
+                    Value val = stateTable.GetValue(line[i].Item1, line[i].Item2);
+                    if (val != current)
                     {
-                        first = Value.None;
+                        current = Value.None;
+                        break;
                     }
                 }
 
-                if (first != Value.None)
+                if (current != Value.None)
                 {
-                    return first;
+                    return current;
                 }
             }
 
-            // No filled rows found.
             return Value.None;
-        }
-
-        /// <summary>
-        /// Checks if any column is filled.
-        /// </summary>
-        /// <returns>True if at least one column is filled.</returns>
-        private Value ColumnFilled()
-        {
-            for (int column = 0; column < TicTacToeTable.Size; ++column)
-            {
-                Value first = stateTable.GetValue(0, column);
-
-                for (int row = 1; first != Value.None && row < TicTacToeTable.Size; ++row)
-                {
-                    if (stateTable.GetValue(row, column) != first)
-                    {
-                        first = Value.None;
-                    }
-                }
-
-                if (first != Value.None)
-                {
-                    return first;
-                }
-            }
-
-            // No filled columns found.
-            return Value.None;
-        }
-
-        /// <summary>
-        /// Checks if any diagonals are filled.
-        /// </summary>
-        /// <returns>True if at least one diagonal is filled.</returns>
-        private Value DiagonalFilled()
-        {
-            Value first = stateTable.GetValue(0, 0);
-            for (int i = 1; first != Value.None && i < TicTacToeTable.Size; ++i)
-            {
-                if (stateTable.GetValue(i, i) != first)
-                {
-                    first = Value.None;
-                }
-            }
-
-            if (first != Value.None)
-            {
-                return first;
-            }
-
-            first = stateTable.GetValue(0, TicTacToeTable.Size - 1);
-            for (int i = 1; first != Value.None && i < TicTacToeTable.Size; ++i)
-            {
-                if (stateTable.GetValue(i, TicTacToeTable.Size - i - 1) != first)
-                {
-                    first = Value.None;
-                }
-            }
-
-            return first;
         }
 
         /// <summary>
@@ -331,8 +254,36 @@ namespace AlphaBeta
             }
             else
             {
-                return 0;
+                return GetWinPathsCount() * TicTacToeConstants.PotentialWinningLinePoints;
             }
+        }
+
+        /// <summary>
+        /// Gets score for potential win paths.
+        /// </summary>
+        /// <returns>Difference between players' number of paths not yet occupied by opponent.</returns>
+        private int GetWinPathsCount()
+        {
+            int xCount = 0;
+            int oCount = 0;
+
+            foreach (var line in TicTacToeConstants.Lines)
+            {
+                bool containsX = false;
+                bool containsO = false;
+
+                foreach (Value cell in line.Select(
+                    position => stateTable.GetValue(position.Item1, position.Item2)))
+                {
+                    containsX |= cell == Value.Maximizing;
+                    containsO |= cell == Value.Minimizing;
+                }
+
+                xCount += containsX ? 1 : 0;
+                oCount += containsO ? 1 : 0;
+            }
+
+            return xCount - oCount;
         }
     }
 }

@@ -8,14 +8,27 @@ using System.Linq;
 
 namespace AlphaBeta
 {
+    /// <summary>
+    /// Demo class.
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// Entry point.
+        /// </summary>
+        /// <param name="args">The console arguments.</param>
         public static void Main(string[] args)
         {
-            AlphaBetaDemo(new TicTacToeNode(), 9U);
             AlphaBetaDemo(new ReversiNode(), 5U);
+            AlphaBetaDemo(new TicTacToeNode(), 5U);
         }
 
+        /// <summary>
+        /// Demo run of the game in computer-vs-computer mode.
+        /// </summary>
+        /// <typeparam name="Node">The type of the node.</typeparam>
+        /// <param name="state">The initial state.</param>
+        /// <param name="depth">The search depth.</param>
         private static void AlphaBetaDemo<Node>(Node state, uint depth) where Node : INode
         {
             AlphaBeta<Node> search = new AlphaBeta<Node>(depth);
