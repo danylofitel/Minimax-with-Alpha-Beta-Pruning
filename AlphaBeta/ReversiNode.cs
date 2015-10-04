@@ -29,11 +29,9 @@ namespace AlphaBeta
         private readonly ReversiTable stateTable;
 
         /// <summary>
-        /// The number of child nodes used by heuristics.
-        /// Initialized during the first computation of children
-        /// to avoid re-computation when evaluating heuristics.
+        /// The child nodes.
         /// </summary>
-        private int? playerChildrenCount = null;
+        private readonly Lazy<IReadOnlyList<ReversiNode>> children;
 
         /// <summary>
         /// The game state heuristics.
@@ -64,9 +62,11 @@ namespace AlphaBeta
             canPass = playerCanPass;
             stateTable = table;
 
-            // Will be initialized during first computation of child nodes.
-            playerChildrenCount = null;
-            heuristics = new Lazy<int>(() => GetHeuristics(), LazyThreadSafetyMode.ExecutionAndPublication);
+            heuristics = new Lazy<int>(() => GetHeuristics(),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+            children = new Lazy<IReadOnlyList<ReversiNode>>(() => GetChildren(),
+                LazyThreadSafetyMode.ExecutionAndPublication);
 
             Debug.Assert(currentPlayer != Value.Empty);
             Player = currentPlayer;
@@ -92,11 +92,7 @@ namespace AlphaBeta
         {
             get
             {
-                // The children nodes are not saved after computation
-                // because of significant memory usage since unit the end
-                // of alpha-beta search all nodes in the tree are referenced
-                // and can't be garbage collected.
-                return GetChildren();
+                return children.Value;
             }
         }
 
@@ -140,7 +136,7 @@ namespace AlphaBeta
         }
 
         /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance. Temporarily added for debugging purposes.
+        /// Returns a <see cref="System.String" /> that represents this instance.
         /// </summary>
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
@@ -192,13 +188,6 @@ namespace AlphaBeta
         /// <returns>Children nodes.</returns>
         private IReadOnlyList<ReversiNode> GetChildren()
         {
-            // If it has been computed previously that the node has no children,
-            // return empty list.
-            if (playerChildrenCount.HasValue && playerChildrenCount.Value == 0)
-            {
-                return new List<ReversiNode>().AsReadOnly();
-            }
-
             var children = GetValidMoves(Player).Select(move =>
             {
                 ReversiTable table = GetTableForMove(move);
@@ -215,18 +204,6 @@ namespace AlphaBeta
                 if (nextNode.Children.Count > 0)
                 {
                     children.Add(nextNode);
-                }
-            }
-
-            // Initialize the children counter if the children have not been computed yet.
-            if (!playerChildrenCount.HasValue)
-            {
-                lock (heuristics)
-                {
-                    if (!playerChildrenCount.HasValue)
-                    {
-                        playerChildrenCount = children.Count;
-                    }
                 }
             }
 
@@ -368,26 +345,12 @@ namespace AlphaBeta
         /// <returns>Heuristic value of current position.</returns>
         private int GetHeuristics()
         {
-            InitializeChildren();
-
-            if (playerChildrenCount == 0)
+            if (children.Value.Count == 0)
             {
                 return GetScore();
             }
 
             return GetMobilityScore() + GetStabilityScore();
-        }
-
-        /// <summary>
-        /// Initializes the number of children used by heuristics.
-        /// </summary>
-        private void InitializeChildren()
-        {
-            if (!playerChildrenCount.HasValue)
-            {
-                // GetChildren() initializes the children count
-                GetChildren();
-            }
         }
 
         /// <summary>
@@ -411,7 +374,7 @@ namespace AlphaBeta
         {
             int opponentChildrenCount = GetValidMoves(Opponent).Count();
 
-            return (playerChildrenCount.Value - opponentChildrenCount)
+            return (children.Value.Count - opponentChildrenCount)
                 * (Player == Value.Maximizing ? 1 : -1)
                 * ReversiConstants.MobilityPoints;
         }

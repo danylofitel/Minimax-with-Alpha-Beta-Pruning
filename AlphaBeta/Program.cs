@@ -13,7 +13,7 @@ namespace AlphaBeta
     {
         public static void Main(string[] args)
         {
-            TicTacToeDemo();
+            ReversiDemo();
         }
 
         private static void TicTacToeDemo()
