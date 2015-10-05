@@ -1,21 +1,24 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ReversiHeuristics.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System.Collections.Generic;
-using System.Linq;
-using Position = System.Tuple<int, int>;
-
 namespace AlphaBeta
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using Position = System.Tuple<int, int>;
+
+    /// <summary>
+    /// The logic for computing heuristic value of reversi position.
+    /// </summary>
     internal static class ReversiHeuristics
     {
         /// <summary>
         /// Returns the table with updated stability values after given move.
         /// </summary>
         /// <param name="table">Table after the move with original stability state.</param>
-        /// <param name="move">The move.</param>
         /// <returns>The table after given move with updated stability values.</returns>
         public static ReversiTable GetTableWithUpdatedStability(this ReversiTable table)
         {
@@ -73,8 +76,8 @@ namespace AlphaBeta
         /// <summary>
         /// Determines whether the specified cell is stable.
         /// </summary>
-        /// <param name="cell">The cell.</param>
         /// <param name="table">The table.</param>
+        /// <param name="cell">The cell.</param>
         /// <returns>True if the cell is stable, false otherwise.</returns>
         public static bool IsStable(this ReversiTable table, Position cell)
         {

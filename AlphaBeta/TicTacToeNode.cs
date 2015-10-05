@@ -1,18 +1,19 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TicTacToeNode.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using Position = System.Tuple<int, int>;
-
 namespace AlphaBeta
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+    using System.Threading;
+    using Position = System.Tuple<int, int>;
+
     /// <summary>
     /// Tic-Tac-Toe game node.
     /// </summary>
@@ -50,21 +51,25 @@ namespace AlphaBeta
         /// <summary>
         /// Initializes a new instance of the <see cref="TicTacToeNode"/> class.
         /// </summary>
+        /// <param name="table">The game state.</param>
+        /// <param name="player">The current player.</param>
         private TicTacToeNode(TicTacToeTable table, Value player)
         {
             stateTable = table;
 
-            winner = new Lazy<Value>(() => IsFinished(),
+            winner = new Lazy<Value>(
+                () => IsFinished(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            children = new Lazy<IReadOnlyList<TicTacToeNode>>(() => GetChildren(),
+            children = new Lazy<IReadOnlyList<TicTacToeNode>>(
+                () => GetChildren(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            heuristics = new Lazy<int>(() => GetHeuristics(),
+            heuristics = new Lazy<int>(
+                () => GetHeuristics(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            Debug.Assert(player != Value.None);
-
+            Debug.Assert(player != Value.None, "Verifying that the player value is valid.");
             Player = player;
             Opponent = player == Value.Maximizing
                 ? Value.Minimizing
@@ -264,8 +269,8 @@ namespace AlphaBeta
         /// <returns>Difference between players' number of paths not yet occupied by opponent.</returns>
         private int GetWinPathsCount()
         {
-            int xCount = 0;
-            int oCount = 0;
+            int countX = 0;
+            int countO = 0;
 
             foreach (var line in TicTacToeConstants.Lines)
             {
@@ -279,11 +284,11 @@ namespace AlphaBeta
                     containsO |= cell == Value.Minimizing;
                 }
 
-                xCount += containsX ? 1 : 0;
-                oCount += containsO ? 1 : 0;
+                countX += containsX ? 1 : 0;
+                countO += containsO ? 1 : 0;
             }
 
-            return xCount - oCount;
+            return countX - countO;
         }
     }
 }

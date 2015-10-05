@@ -1,13 +1,14 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="INode.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-
 namespace AlphaBeta
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Interface for an immutable state of a zero-sum game for 2 players.
     /// The node implements IComparable to allow sorting decisions in the search tree.

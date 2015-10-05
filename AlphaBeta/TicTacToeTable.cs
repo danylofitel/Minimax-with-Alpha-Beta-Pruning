@@ -1,5 +1,6 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TicTacToeTable.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -11,24 +12,24 @@ namespace AlphaBeta
     internal struct TicTacToeTable
     {
         /// <summary>
-        /// The set of game cells.
-        /// </summary>
-        private uint table;
-
-        /// <summary>
         /// Gets the board size. Classic version is 3x3.
         /// </summary>
-        public static int Size { get; } = 3;
+        public const int Size = 3;
 
         /// <summary>
         /// The cell count.
         /// </summary>
-        private static int CellCount { get; } = Size * Size;
+        private const int CellCount = Size * Size;
 
         /// <summary>
         /// Gets the bit mask covering filled cells table.
         /// </summary>
-        private static uint FilledCellsMask { get; } = 0x1FFU;
+        private const uint FilledCellsMask = 0x1FFU;
+
+        /// <summary>
+        /// The set of game cells.
+        /// </summary>
+        private uint table;
 
         /// <summary>
         /// Gets the value of specified cell.
@@ -110,7 +111,7 @@ namespace AlphaBeta
         }
 
         /// <summary>
-        /// Counts the number of set bits in an unsigned int using Hamming's weight algorithm.
+        /// Counts the number of set bits in an unsigned integer using Hamming's weight algorithm.
         /// </summary>
         /// <param name="map">The bitmap.</param>
         /// <returns>Number of set bits.</returns>

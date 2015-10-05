@@ -1,13 +1,14 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="TicTacToeConstants.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System.Collections.Generic;
-using Position = System.Tuple<int, int>;
-
 namespace AlphaBeta
 {
+    using System.Collections.Generic;
+    using Position = System.Tuple<int, int>;
+
     /// <summary>
     /// Tic-Tac-Toe constants.
     /// </summary>
@@ -16,12 +17,12 @@ namespace AlphaBeta
         /// <summary>
         /// Gets the potential winning line points.
         /// </summary>
-        public static int PotentialWinningLinePoints { get; } = 1;
+        public const int PotentialWinningLinePoints = 1;
 
         /// <summary>
         /// Gets the points for victory.
         /// </summary>
-        public static int VictoryPoints { get; } = 1000;
+        public const int VictoryPoints = 1000;
 
         /// <summary>
         /// All Tic-Tac-Toe game lines.

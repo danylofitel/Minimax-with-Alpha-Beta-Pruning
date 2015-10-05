@@ -1,15 +1,16 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="AlphaBeta.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace AlphaBeta
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Implementation of minimax search with alpha-beta pruning.
     /// </summary>
@@ -56,12 +57,14 @@ namespace AlphaBeta
             List<Task<Tuple<double, Node>>> tasks = new List<Task<Tuple<double, Node>>>();
             foreach (Node child in root.Children)
             {
-                tasks.Add(Task.Run(() => new Tuple<double, Node>(Search(
-                    child,
-                    searchDepth - 1,
-                    double.NegativeInfinity,
-                    double.PositiveInfinity,
-                    !maximizing), child)));
+                tasks.Add(Task.Run(() => new Tuple<double, Node>(
+                    Search(
+                        child,
+                        searchDepth - 1,
+                        double.NegativeInfinity,
+                        double.PositiveInfinity,
+                        !maximizing),
+                    child)));
             }
 
             Tuple<double, Node>[] results = await Task.WhenAll(tasks);

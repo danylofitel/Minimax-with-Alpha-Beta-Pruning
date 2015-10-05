@@ -1,18 +1,19 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ReversiNode.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using Position = System.Tuple<int, int>;
-
 namespace AlphaBeta
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+    using System.Threading;
+    using Position = System.Tuple<int, int>;
+
     /// <summary>
     /// An immutable representation of Reversi game position.
     /// </summary>
@@ -51,9 +52,8 @@ namespace AlphaBeta
         /// Initializes a new instance of the <see cref="ReversiNode" /> class.
         /// </summary>
         /// <param name="table">The game state.</param>
-        /// <param name="stabilityTable">The flags of stable cells.</param>
         /// <param name="currentPlayer">Current player.</param>
-        /// <param name="canPass">Indicates whether the current player can pass a move.</param>
+        /// <param name="playerCanPass">Indicates whether the current player can pass a move.</param>
         private ReversiNode(
             ReversiTable table,
             Value currentPlayer,
@@ -62,13 +62,15 @@ namespace AlphaBeta
             canPass = playerCanPass;
             stateTable = table;
 
-            heuristics = new Lazy<int>(() => GetHeuristics(),
+            heuristics = new Lazy<int>(
+                () => GetHeuristics(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            children = new Lazy<IReadOnlyList<ReversiNode>>(() => GetChildren(),
+            children = new Lazy<IReadOnlyList<ReversiNode>>(
+                () => GetChildren(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
-            Debug.Assert(currentPlayer != Value.None);
+            Debug.Assert(currentPlayer != Value.None, "Verifying that the player value is valid.");
             Player = currentPlayer;
             Opponent = currentPlayer == Value.Maximizing
                 ? Value.Minimizing
@@ -86,7 +88,7 @@ namespace AlphaBeta
         public Value Opponent { get; private set; }
 
         /// <summary>
-        /// Children nodes.
+        /// Gets the child nodes.
         /// </summary>
         public IReadOnlyList<INode> Children
         {
@@ -97,7 +99,7 @@ namespace AlphaBeta
         }
 
         /// <summary>
-        /// Heuristics of current position.
+        /// Gets heuristics of current position.
         /// </summary>
         public int Heuristics
         {
@@ -296,7 +298,7 @@ namespace AlphaBeta
         /// <returns>True if the move flips opponent's cells in given direction, false otherwise.</returns>
         private bool MoveCapturesDirection(Value player, Position move, Position direction)
         {
-            Debug.Assert(player != Value.None);
+            Debug.Assert(player != Value.None, "Verifying that the player value is valid.");
             Value opponent = player == Value.Maximizing
                 ? Value.Minimizing
                 : Value.Maximizing;

@@ -1,13 +1,14 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="Program.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Linq;
-
 namespace AlphaBeta
 {
+    using System;
+    using System.Linq;
+
     /// <summary>
     /// Demo class.
     /// </summary>
@@ -24,7 +25,7 @@ namespace AlphaBeta
         }
 
         /// <summary>
-        /// Demo run of the game in computer-vs-computer mode.
+        /// Demo run of the game in computer against computer mode.
         /// </summary>
         /// <typeparam name="Node">The type of the node.</typeparam>
         /// <param name="state">The initial state.</param>

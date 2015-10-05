@@ -1,13 +1,14 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ReversiConstants.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System.Collections.Generic;
-using Position = System.Tuple<int, int>;
-
 namespace AlphaBeta
 {
+    using System.Collections.Generic;
+    using Position = System.Tuple<int, int>;
+
     /// <summary>
     /// Constants for Reversi game.
     /// </summary>
@@ -16,18 +17,18 @@ namespace AlphaBeta
         /// <summary>
         /// Gets the mobility points per cell.
         /// </summary>
-        public static int MobilityPoints { get; } = 5;
+        public const int MobilityPoints = 5;
 
         /// <summary>
         /// Gets the stability points per cell.
         /// </summary>
-        public static int StabilityPoints { get; } = 100;
+        public const int StabilityPoints = 100;
 
         /// <summary>
         /// Gets the victory points.
         /// 64 * (Mobility + Stability) is significantly less than Victory
         /// </summary>
-        public static int VictoryPoints { get; } = 1000000;
+        public const int VictoryPoints = 1000000;
 
         /// <summary>
         /// 8 possible directions from any cell.

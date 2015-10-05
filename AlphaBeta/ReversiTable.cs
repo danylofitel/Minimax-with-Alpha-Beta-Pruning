@@ -1,5 +1,6 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ReversiTable.cs" author="Danylo Fitel">
+// All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -11,57 +12,55 @@ namespace AlphaBeta
     internal struct ReversiTable
     {
         /// <summary>
-        /// The flags indicating which cells are used (0 is empty, 1 is used).
-        /// </summary>
-        private ulong OccupiedCellsTable;
-
-        /// <summary>
-        /// The flags indicating which player's disks are at game cells (1 is maximizing player's cell).
-        /// </summary>
-        private ulong PlayersTable;
-
-        /// <summary>
-        /// Flags indicating which cells are stable.
-        /// </summary>
-        private ulong StabilityTable;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ReversiTable"/> struct.
-        /// </summary>
-        /// <param name="occupiedCellsTable">The occupied cells table.</param>
-        /// <param name="playersTable">The players table.</param>
-        /// <param name="stabilityTable">The stability table.</param>
-        public static ReversiTable InitialState()
-        {
-            ReversiTable table = new ReversiTable();
-
-            table.OccupiedCellsTable = OccupiedCellsBitMap;
-            table.PlayersTable = PlayersCellsBitMap;
-            table.StabilityTable = StabilityCellsBitMap;
-
-            return table;
-        }
-
-        /// <summary>
         /// Gets the length and width of the board. 8 is the classic version.
         /// </summary>
-        public static int Size { get; } = 8;
+        public const int Size = 8;
 
         /// <summary>
         /// Gets the table of occupied cells at starting position in a form of bit map.
         /// </summary>
-        private static ulong OccupiedCellsBitMap { get; } = 0x1818000000UL;
+        private const ulong OccupiedCellsBitMap = 0x1818000000UL;
 
         /// <summary>
         /// Gets the table of cells values at starting position in a form of bit map,
         /// 1 stands for maximizing player's cell.
         /// </summary>
-        private static ulong PlayersCellsBitMap { get; } = 0x810000000UL;
+        private const ulong PlayersCellsBitMap = 0x810000000UL;
 
         /// <summary>
         /// Gets the table of cell stability values at starting position in a form of bit map.
         /// </summary>
-        private static ulong StabilityCellsBitMap { get; } = 0x0UL;
+        private const ulong StabilityCellsBitMap = 0x0UL;
+
+        /// <summary>
+        /// The flags indicating which cells are used (0 is empty, 1 is used).
+        /// </summary>
+        private ulong occupiedCellsTable;
+
+        /// <summary>
+        /// The flags indicating which player's disks are at game cells (1 is maximizing player's cell).
+        /// </summary>
+        private ulong playersTable;
+
+        /// <summary>
+        /// Flags indicating which cells are stable.
+        /// </summary>
+        private ulong stabilityTable;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReversiTable"/> struct.
+        /// </summary>
+        /// <returns>Reversi table at the beginning of the game.</returns>
+        public static ReversiTable InitialState()
+        {
+            ReversiTable table = new ReversiTable();
+
+            table.occupiedCellsTable = OccupiedCellsBitMap;
+            table.playersTable = PlayersCellsBitMap;
+            table.stabilityTable = StabilityCellsBitMap;
+
+            return table;
+        }
 
         /// <summary>
         /// Gets the value by coordinates.
@@ -71,9 +70,11 @@ namespace AlphaBeta
         /// <returns>Cell value.</returns>
         public Value GetValue(int row, int column)
         {
-            if (((OccupiedCellsTable >> row * Size + column) & 1UL) == 1UL)
+            int index = row * Size + column;
+
+            if (((occupiedCellsTable >> index) & 1UL) == 1UL)
             {
-                return ((PlayersTable >> row * Size + column) & 1UL) == 1UL
+                return ((playersTable >> index) & 1UL) == 1UL
                     ? Value.Maximizing
                     : Value.Minimizing;
             }
@@ -93,19 +94,19 @@ namespace AlphaBeta
 
             if (value == Value.None)
             {
-                OccupiedCellsTable &= ~mask;
-                PlayersTable &= ~mask;
+                occupiedCellsTable &= ~mask;
+                playersTable &= ~mask;
             }
             else
             {
-                OccupiedCellsTable |= mask;
+                occupiedCellsTable |= mask;
                 if (value == Value.Maximizing)
                 {
-                    PlayersTable |= mask;
+                    playersTable |= mask;
                 }
                 else
                 {
-                    PlayersTable &= ~mask;
+                    playersTable &= ~mask;
                 }
             }
         }
@@ -118,7 +119,8 @@ namespace AlphaBeta
         /// <returns>Cell stability value.</returns>
         public bool GetStable(int row, int column)
         {
-            return ((StabilityTable >> row * Size + column) & 1UL) == 1UL;
+            int index = row * Size + column;
+            return ((stabilityTable >> index) & 1UL) == 1UL;
         }
 
         /// <summary>
@@ -133,36 +135,36 @@ namespace AlphaBeta
 
             if (value)
             {
-                StabilityTable |= mask;
+                stabilityTable |= mask;
             }
             else
             {
-                StabilityTable &= ~mask;
+                stabilityTable &= ~mask;
             }
         }
 
         /// <summary>
-        /// The number of occupied cells.
+        /// Computes the number of occupied cells.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The number of occupied cells.</returns>
         public int OccupiedCells()
         {
-            return HammingWeightBitcount(OccupiedCellsTable);
+            return HammingWeightBitcount(occupiedCellsTable);
         }
 
         /// <summary>
-        /// The number of cells occupied by maximizing player.
+        /// Computes the number of cells occupied by maximizing player.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The number of cells occupied by maximizing player.</returns>
         public int MaximizingPlayerCells()
         {
-            return HammingWeightBitcount(PlayersTable);
+            return HammingWeightBitcount(playersTable);
         }
 
         /// <summary>
-        /// The number of cells occupied by minimizing player.
+        /// Computes the number of cells occupied by minimizing player.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The number of cells occupied by minimizing player.</returns>
         public int MinimizingPlayerCells()
         {
             return OccupiedCells() - MaximizingPlayerCells();
