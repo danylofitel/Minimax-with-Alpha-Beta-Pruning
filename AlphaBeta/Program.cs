@@ -36,7 +36,7 @@ namespace AlphaBeta
             while (state.Children.Any())
             {
                 Console.WriteLine(state);
-                state = search.Best(state);
+                state = search.Best(state).Result;
             }
 
             Console.WriteLine(state);

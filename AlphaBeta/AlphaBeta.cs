@@ -40,7 +40,7 @@ namespace AlphaBeta
         /// </summary>
         /// <param name="root">Initial state.</param>
         /// <returns>The best child node.</returns>
-        public Node Best(Node root)
+        public async Task<Node> Best(Node root)
         {
             if (root == null)
             {
@@ -64,19 +64,19 @@ namespace AlphaBeta
                     !maximizing), child)));
             }
 
-            Task.WaitAll(tasks.ToArray());
+            Tuple<double, Node>[] results = await Task.WhenAll(tasks);
 
             Node bestNode = default(Node);
             if (maximizing)
             {
                 double bestValue = double.NegativeInfinity;
 
-                foreach (var result in tasks)
+                foreach (var result in results)
                 {
-                    if (result.Result.Item1 > bestValue)
+                    if (result.Item1 > bestValue)
                     {
-                        bestNode = result.Result.Item2;
-                        bestValue = result.Result.Item1;
+                        bestNode = result.Item2;
+                        bestValue = result.Item1;
                     }
                 }
             }
@@ -84,12 +84,12 @@ namespace AlphaBeta
             {
                 double bestValue = double.PositiveInfinity;
 
-                foreach (var result in tasks)
+                foreach (var result in results)
                 {
-                    if (result.Result.Item1 < bestValue)
+                    if (result.Item1 < bestValue)
                     {
-                        bestNode = result.Result.Item2;
-                        bestValue = result.Result.Item1;
+                        bestNode = result.Item2;
+                        bestValue = result.Item1;
                     }
                 }
             }
